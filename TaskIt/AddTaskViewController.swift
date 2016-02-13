@@ -7,15 +7,14 @@
 //
 
 import UIKit
+import CoreData
 
 class AddTaskViewController: UIViewController {
 
     @IBOutlet weak var taskNameTextField: UITextField!
     @IBOutlet weak var taskDescriptionTextField: UITextField!
     @IBOutlet weak var taskDateDatePicker: UIDatePicker!
-    
-    var vc: ViewController!
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -28,9 +27,34 @@ class AddTaskViewController: UIViewController {
     }
     
     @IBAction func createTask(sender: AnyObject) {
-        let task:TaskModel = TaskModel(name: self.taskNameTextField.text!, description: self.taskDescriptionTextField.text!, date: taskDateDatePicker.date, completed: false)
+        
+        let appDelegate = (UIApplication.sharedApplication().delegate as! AppDelegate)
+        
+        let moc = appDelegate.managedObjectContext
+        
+        let entityDescription = NSEntityDescription.entityForName("TaskModel", inManagedObjectContext: moc)
+        
+        let task = TaskModel(entity: entityDescription!, insertIntoManagedObjectContext: moc)
+        task.name = taskNameTextField.text
+        task.desc = taskDescriptionTextField.text
+        task.date = taskDateDatePicker.date
+        task.completed = false
+        
+        appDelegate.saveContext()
+        
+        let request = NSFetchRequest(entityName: "TaskModel");
 
-        self.vc!.taskArray.append(task)
+        
+        let results: NSArray?
+        do {
+            results = try moc.executeFetchRequest(request)
+        } catch _ {
+            results = nil
+        }
+        
+        for result in results! {
+            print(result)
+        }
         
         self.dismissViewControllerAnimated(true, completion: nil)
     }
